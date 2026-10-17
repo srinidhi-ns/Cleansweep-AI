@@ -312,7 +312,8 @@ function createStreetEvidenceDataUrl({
     <text x="784" y="465" fill="#10b981" font-family="monospace" font-size="12" font-weight="bold" text-anchor="end">UN SDG 11 • CLEANSWEEP AI</text>
   </svg>`;
 
-  return `data:image/svg+xml;utf8,${encodeURIComponent(svg)}`;
+  const base64Svg = window.btoa(unescape(encodeURIComponent(svg)));
+  return `data:image/svg+xml;base64,${base64Svg}`;
 }
 
 // Preset Scenarios for 1-Click Citizen & BMTC Testing
@@ -804,6 +805,8 @@ function formatCountdown(deadlineIso, nowMs) {
 // ============================================================================
 // 5. INTERACTIVE BENGALURU LEAFLET / OPENSTREETMAP COMPONENT
 // ============================================================================
+const CARTO_API_KEY = 'cb1_4n7l_1_e02566b47a93d6245d7a8739';
+
 function BengaluruLeafletMap({
   reports,
   trucks,
@@ -816,8 +819,11 @@ function BengaluruLeafletMap({
 }) {
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
+  const tileLayerRef = useRef(null);
+  const labelLayerRef = useRef(null);
   const layerGroupRef = useRef(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
+  const [tileProvider, setTileProvider] = useState('esri_dark_streets'); // 'esri_dark_streets' | 'esri_dark_canvas' | 'esri_sat' | 'carto'
   const [layersVisible, setLayersVisible] = useState({
     reports: true,
     trucks: true,
@@ -828,6 +834,21 @@ function BengaluruLeafletMap({
 
   // Dynamically load Leaflet CSS & JS from CDN
   useEffect(() => {
+    const styleId = 'leaflet-dark-filter-css';
+    if (!document.getElementById(styleId)) {
+      const style = document.createElement('style');
+      style.id = styleId;
+      style.innerHTML = `
+        .esri-dark-street-tiles {
+          filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%);
+        }
+        .leaflet-container {
+          background-color: #0B1120 !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
     if (window.L) {
       setLeafletLoaded(true);
       return;
@@ -845,7 +866,11 @@ function BengaluruLeafletMap({
     const scriptId = 'leaflet-cdn-js';
     const existingScript = document.getElementById(scriptId);
     if (existingScript) {
-      existingScript.addEventListener('load', () => setLeafletLoaded(true));
+      if (window.L) {
+        setLeafletLoaded(true);
+      } else {
+        existingScript.addEventListener('load', () => setLeafletLoaded(true));
+      }
       return;
     }
 
@@ -868,22 +893,86 @@ function BengaluruLeafletMap({
       zoomControl: true
     });
 
-    // Dark-themed CartoDB Dark Matter / OpenStreetMap tiles for Civic Command Center look
-    L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-      attribution: '&copy; OpenStreetMap contributors &copy; CARTO | BBMP GIS Grid',
-      subdomains: 'abcd',
-      maxZoom: 19
-    }).addTo(map);
-
     const layerGroup = L.layerGroup().addTo(map);
     mapInstanceRef.current = map;
     layerGroupRef.current = layerGroup;
+
+    // Ensure proper map sizing once mounted
+    setTimeout(() => {
+      map.invalidateSize();
+    }, 200);
 
     return () => {
       map.remove();
       mapInstanceRef.current = null;
     };
   }, [leafletLoaded]);
+
+  // Switch between Esri Dark Streets (no 403 / no watermark), Esri Dark Gray Canvas, Satellite, and Carto
+  useEffect(() => {
+    if (!leafletLoaded || !mapInstanceRef.current) return;
+    const L = window.L;
+    const map = mapInstanceRef.current;
+
+    if (tileLayerRef.current) {
+      map.removeLayer(tileLayerRef.current);
+      tileLayerRef.current = null;
+    }
+    if (labelLayerRef.current) {
+      map.removeLayer(labelLayerRef.current);
+      labelLayerRef.current = null;
+    }
+
+    if (tileProvider === 'esri_dark_canvas') {
+      tileLayerRef.current = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri | BBMP GIS Command',
+          maxZoom: 19
+        }
+      ).addTo(map);
+      labelLayerRef.current = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
+        {
+          maxZoom: 19
+        }
+      ).addTo(map);
+    } else if (tileProvider === 'esri_sat') {
+      tileLayerRef.current = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri | BBMP Spatial Command',
+          maxZoom: 19
+        }
+      ).addTo(map);
+      labelLayerRef.current = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
+        {
+          maxZoom: 19
+        }
+      ).addTo(map);
+    } else if (tileProvider === 'carto') {
+      tileLayerRef.current = L.tileLayer(
+        `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}&apikey=${CARTO_API_KEY}`,
+        {
+          attribution: '&copy; OpenStreetMap &copy; CARTO',
+          subdomains: 'abcd',
+          maxZoom: 19,
+          className: 'esri-dark-street-tiles'
+        }
+      ).addTo(map);
+    } else {
+      // Default: Esri World Street Map with Dark Command Filter (Zero 403 blocks, crisp Bengaluru streets)
+      tileLayerRef.current = L.tileLayer(
+        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        {
+          attribution: 'Tiles &copy; Esri | Bengaluru BBMP GIS Grid (Key: ' + CARTO_API_KEY.slice(0, 8) + '...)',
+          maxZoom: 19,
+          className: 'esri-dark-street-tiles'
+        }
+      ).addTo(map);
+    }
+  }, [tileProvider, leafletLoaded]);
 
   // Handle Map Click for GPS selection
   useEffect(() => {
@@ -1114,6 +1203,31 @@ function BengaluruLeafletMap({
             {item.label}
           </button>
         ))}
+
+        <button
+          onClick={() =>
+            setTileProvider((prev) =>
+              prev === 'esri_dark_streets'
+                ? 'esri_dark_canvas'
+                : prev === 'esri_dark_canvas'
+                ? 'esri_sat'
+                : prev === 'esri_sat'
+                ? 'carto'
+                : 'esri_dark_streets'
+            )
+          }
+          className="px-2.5 py-1 rounded-md text-xs font-bold border bg-slate-900/90 border-sky-500/50 text-sky-300 backdrop-blur-md hover:bg-slate-800 transition-all"
+          title="Switch Map Tile Engine"
+        >
+          🗺️ Map:{' '}
+          {tileProvider === 'esri_dark_streets'
+            ? 'Bengaluru Dark Streets'
+            : tileProvider === 'esri_dark_canvas'
+            ? 'Dark Gray Canvas'
+            : tileProvider === 'esri_sat'
+            ? 'Satellite Hybrid'
+            : 'CARTO API'}
+        </button>
       </div>
 
       {/* Bottom-Left Bengaluru GIS Coordinate Legend */}
@@ -1158,27 +1272,27 @@ export default function App() {
 
   // Core Application Entities (Synced to localStorage + Supabase REST if configured)
   const [trucks, setTrucks] = useState(() => {
-    const s = localStorage.getItem('cs_blr_trucks');
+    const s = localStorage.getItem('cs_blr_trucks_v6');
     return s ? JSON.parse(s) : INITIAL_TRUCKS;
   });
 
   const [vehicleRegistry, setVehicleRegistry] = useState(() => {
-    const s = localStorage.getItem('cs_blr_registry');
+    const s = localStorage.getItem('cs_blr_registry_v6');
     return s ? JSON.parse(s) : INITIAL_VEHICLE_REGISTRY;
   });
 
   const [reports, setReports] = useState(() => {
-    const s = localStorage.getItem('cs_blr_reports');
+    const s = localStorage.getItem('cs_blr_reports_v6');
     return s ? JSON.parse(s) : createInitialReports();
   });
 
   const [challans, setChallans] = useState(() => {
-    const s = localStorage.getItem('cs_blr_challans');
+    const s = localStorage.getItem('cs_blr_challans_v6');
     return s ? JSON.parse(s) : createInitialChallans();
   });
 
   const [hotspots, setHotspots] = useState(() => {
-    const s = localStorage.getItem('cs_blr_hotspots');
+    const s = localStorage.getItem('cs_blr_hotspots_v6');
     return s ? JSON.parse(s) : INITIAL_HOTSPOTS;
   });
 
@@ -1193,19 +1307,19 @@ export default function App() {
 
   // Persist state changes to localStorage
   useEffect(() => {
-    localStorage.setItem('cs_blr_trucks', JSON.stringify(trucks));
+    localStorage.setItem('cs_blr_trucks_v6', JSON.stringify(trucks));
   }, [trucks]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_registry', JSON.stringify(vehicleRegistry));
+    localStorage.setItem('cs_blr_registry_v6', JSON.stringify(vehicleRegistry));
   }, [vehicleRegistry]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_reports', JSON.stringify(reports));
+    localStorage.setItem('cs_blr_reports_v6', JSON.stringify(reports));
   }, [reports]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_challans', JSON.stringify(challans));
+    localStorage.setItem('cs_blr_challans_v6', JSON.stringify(challans));
   }, [challans]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_hotspots', JSON.stringify(hotspots));
+    localStorage.setItem('cs_blr_hotspots_v6', JSON.stringify(hotspots));
   }, [hotspots]);
 
   // Modals & Notification State
@@ -1240,6 +1354,13 @@ export default function App() {
   // BMTC Bus Simulator State
   const [selectedBusId, setSelectedBusId] = useState(BMTC_ROUTES[0].id);
   const [isAutoPatrolActive, setIsAutoPatrolActive] = useState(false);
+  
+  // Webcam State for BMTC Simulator
+  const videoRef = useRef(null);
+  const canvasRef = useRef(null);
+  const [isWebcamActive, setIsWebcamActive] = useState(false);
+  const [webcamStream, setWebcamStream] = useState(null);
+
   const [bmtcScanLog, setBmtcScanLog] = useState([
     {
       id: 'log-1',
@@ -1631,8 +1752,50 @@ Return strict JSON with keys:
   };
 
   // ============================================================================
-  // 9. BMTC BUS AUTO-PATROL SIMULATION EFFECT
+  // 9. BMTC BUS AUTO-PATROL SIMULATION EFFECT & WEBCAM
   // ============================================================================
+  const toggleWebcam = async () => {
+    if (isWebcamActive) {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach((track) => track.stop());
+      }
+      setWebcamStream(null);
+      setIsWebcamActive(false);
+    } else {
+      if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
+        triggerToast('Camera Not Supported', 'Webcam access is restricted in this environment.', 'rose');
+        return;
+      }
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+        setWebcamStream(stream);
+        setIsWebcamActive(true);
+      } catch (err) {
+        console.warn("Webcam issue:", err.message);
+        if (err.name === 'NotFoundError' || err.message.includes('device not found')) {
+          triggerToast('No Webcam Found', 'Could not detect a camera connected to your device.', 'rose');
+        } else {
+          triggerToast('Webcam Access Denied', 'Please allow camera permissions to use the live feed.', 'rose');
+        }
+        setIsWebcamActive(false);
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (videoRef.current && webcamStream) {
+      videoRef.current.srcObject = webcamStream;
+    }
+  }, [isWebcamActive, webcamStream]);
+
+  useEffect(() => {
+    return () => {
+      if (webcamStream) {
+        webcamStream.getTracks().forEach((t) => t.stop());
+      }
+    };
+  }, [webcamStream]);
+
   const handleSimulateBmtcCapture = useCallback(
     (busObj) => {
       const targetBus = busObj || bmtcBuses.find((b) => b.id === selectedBusId) || bmtcBuses[0];
@@ -1643,6 +1806,25 @@ Return strict JSON with keys:
       const jitterLat = Number((loc.lat + (Math.random() - 0.5) * 0.003).toFixed(4));
       const jitterLng = Number((loc.lng + (Math.random() - 0.5) * 0.003).toFixed(4));
 
+      let customImageBase64 = null;
+      let customPreviewUrl = null;
+
+      if (isWebcamActive && videoRef.current && canvasRef.current) {
+        const video = videoRef.current;
+        const canvas = canvasRef.current;
+        if (video.videoWidth) {
+          canvas.width = video.videoWidth;
+          canvas.height = video.videoHeight;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+          customPreviewUrl = canvas.toDataURL('image/jpeg');
+          customImageBase64 = {
+            data: customPreviewUrl.split(',')[1],
+            mimeType: 'image/jpeg'
+          };
+        }
+      }
+
       runGeminiVisionAndDispatch({
         sourceType: 'bmtc_bus_camera',
         sourceIdentifier: `BMTC ${targetBus.routeCode} (${targetBus.busNumber})`,
@@ -1650,8 +1832,8 @@ Return strict JSON with keys:
         customLat: jitterLat,
         customLng: jitterLng,
         customWard: loc.ward,
-        imageBase64Obj: null,
-        previewUrl: null
+        imageBase64Obj: customImageBase64,
+        previewUrl: customPreviewUrl
       });
 
       const timeStr = new Date().toLocaleTimeString('en-IN', { hour12: false }) + ' IST';
@@ -1668,7 +1850,7 @@ Return strict JSON with keys:
         ...prev.slice(0, 9)
       ]);
     },
-    [bmtcBuses, selectedBusId, runGeminiVisionAndDispatch]
+    [bmtcBuses, selectedBusId, runGeminiVisionAndDispatch, isWebcamActive]
   );
 
   useEffect(() => {
@@ -2627,36 +2809,57 @@ Return strict JSON with keys:
               {/* Simulated Live BMTC Dashcam Feed */}
               {(() => {
                 const activeBus = bmtcBuses.find((b) => b.id === selectedBusId) || bmtcBuses[0];
-                const scen = PRESET_SCENARIOS[activeBus.linkedScenarioIndex];
-                const loc = BENGALURU_LOCATIONS.find((l) => l.id === scen.locationId) || BENGALURU_LOCATIONS[0];
-                const dashcamUrl = createStreetEvidenceDataUrl({
-                  title: `${activeBus.routeCode} • ${loc.name}`,
-                  ward: loc.ward,
-                  plate: scen.licensePlate,
-                  vehicleName: scen.vehicleName,
-                  wasteType: `${scen.wasteCategory.slice(0, 32)} (${scen.estimatedVolumeKg} kg)`,
-                  severity: scen.severity,
-                  sourceTag: `BMTC ${activeBus.busNumber} AI DASHCAM`
-                });
 
                 return (
                   <div className="space-y-3">
-                    <div className="rounded-xl overflow-hidden border-2 border-blue-500/40 bg-slate-950">
-                      <img
-                        src={dashcamUrl}
-                        alt="BMTC Dashcam View"
-                        className="w-full h-64 sm:h-72 object-cover"
-                      />
+                    <div className="flex items-center justify-between px-1">
+                      <span className="text-xs font-bold text-slate-300">Live Edge Camera View</span>
+                    </div>
+
+                    <div className="relative rounded-xl overflow-hidden border-2 border-blue-500/40 bg-slate-950 flex flex-col items-center justify-center min-h-[16rem] sm:min-h-[18rem]">
+                      <video ref={videoRef} autoPlay playsInline muted className={`absolute inset-0 w-full h-full object-cover ${isWebcamActive ? 'block' : 'hidden'}`} />
+                      <canvas ref={canvasRef} className="hidden" />
+                      
+                      {isWebcamActive ? (
+                        <>
+                          <div className="absolute top-3 left-3 bg-rose-500 text-white text-[10px] font-bold px-2 py-0.5 rounded shadow-lg flex items-center gap-1.5 animate-pulse z-10">
+                            <span className="w-1.5 h-1.5 rounded-full bg-white" /> LIVE REC
+                          </div>
+                          <button
+                            onClick={toggleWebcam}
+                            className="absolute top-3 right-3 px-2.5 py-1 rounded bg-slate-900/80 text-white text-[10px] font-bold border border-slate-700 hover:bg-slate-800 z-10 transition"
+                          >
+                            Stop Camera
+                          </button>
+                        </>
+                      ) : (
+                        <div className="z-10 flex flex-col items-center p-6 text-center">
+                          <Camera className="w-12 h-12 text-slate-600 mb-3" />
+                          <p className="text-sm font-semibold text-slate-300 mb-4">Laptop Camera Offline</p>
+                          <button
+                            onClick={toggleWebcam}
+                            className="px-4 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-extrabold text-xs flex items-center gap-2 transition shadow-lg shadow-emerald-500/20"
+                          >
+                            <Play className="w-4 h-4" /> Start Live Webcam Feed
+                          </button>
+                        </div>
+                      )}
                     </div>
 
                     <button
-                      disabled={isAnalyzingAi}
+                      disabled={isAnalyzingAi || !isWebcamActive}
                       onClick={() => handleSimulateBmtcCapture(activeBus)}
-                      className="w-full py-3.5 px-5 rounded-xl bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-400 hover:to-emerald-400 text-slate-950 font-black text-sm shadow-lg transition flex items-center justify-center gap-2"
+                      className={`w-full py-3.5 px-5 rounded-xl font-black text-sm shadow-lg transition flex items-center justify-center gap-2 ${
+                        isWebcamActive && !isAnalyzingAi
+                          ? 'bg-gradient-to-r from-blue-500 to-emerald-500 hover:from-blue-400 hover:to-emerald-400 text-slate-950'
+                          : 'bg-slate-800 text-slate-500 cursor-not-allowed'
+                      }`}
                     >
                       <Camera className="w-5 h-5" />
                       <span>
-                        Simulate BMTC Bus AI Capture ({activeBus.routeCode}) → Auto-Dispatch &amp; E-Challan
+                        {isWebcamActive 
+                           ? `Capture Frame (${activeBus.routeCode}) → Auto-Dispatch & E-Challan`
+                           : 'Webcam Required for AI Capture'}
                       </span>
                     </button>
                   </div>
