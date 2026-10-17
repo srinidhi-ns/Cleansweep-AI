@@ -5,7 +5,7 @@ import {
   Download, Bus, Navigation, Search, Eye, Check, X, Sparkles,
   Activity, Flame, Award, Phone, Mail, FileText, Send, Play, Pause,
   Crosshair, Layers, ArrowRight, Trash2, Zap, Info, ExternalLink,
-  ChevronRight, Radio, Filter, UserCheck, Scale
+  ChevronRight, Radio, Filter, UserCheck, Scale, Palette, Sun, Moon
 } from 'lucide-react';
 
 // ============================================================================
@@ -192,135 +192,50 @@ const BENGALURU_LOCATIONS = [
   }
 ];
 
-// Generate realistic Street-Cam / Citizen Evidence SVG Data URLs (with visible trash & KA License Plates)
-// so both human viewers and Gemini Vision API can inspect the scene & read the number plate!
-function createStreetEvidenceDataUrl({
-  title,
-  ward,
-  plate,
-  vehicleName,
-  wasteType,
-  severity,
-  timestamp,
-  isCleaned = false,
-  sourceTag = 'CITIZEN CAM'
-}) {
-  const bgSky = isCleaned ? '#064e3b' : '#0f172a';
-  const roadColor = '#1e293b';
-  const accentColor = isCleaned ? '#10b981' : severity === 'Critical' ? '#ef4444' : '#f59e0b';
-
-  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="800" height="480" viewBox="0 0 800 480">
-    <defs>
-      <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-        <stop offset="0%" stop-color="${bgSky}"/>
-        <stop offset="100%" stop-color="#1e293b"/>
-      </linearGradient>
-      <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
-        <path d="M 40 0 L 0 0 0 40" fill="none" stroke="rgba(255,255,255,0.04)" stroke-width="1"/>
-      </pattern>
-    </defs>
-
-    <!-- Background Sky & Urban Silhouette -->
-    <rect width="800" height="480" fill="url(#sky)"/>
-    <rect width="800" height="480" fill="url(#grid)"/>
-
-    <!-- Bengaluru Metro / Flyover Silhouette -->
-    <rect x="0" y="130" width="800" height="22" fill="#334155" opacity="0.6"/>
-    <rect x="120" y="152" width="36" height="130" fill="#1e293b" opacity="0.7"/>
-    <rect x="420" y="152" width="36" height="130" fill="#1e293b" opacity="0.7"/>
-    <rect x="680" y="152" width="36" height="130" fill="#1e293b" opacity="0.7"/>
-
-    <!-- Buildings & Trees -->
-    <rect x="30" y="90" width="90" height="190" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-    <rect x="520" y="75" width="130" height="205" fill="#0f172a" stroke="#334155" stroke-width="1"/>
-    <circle cx="240" cy="210" r="45" fill="#065f46" opacity="0.7"/>
-    <circle cx="285" cy="220" r="35" fill="#047857" opacity="0.7"/>
-
-    <!-- BBMP Street Signboard -->
-    <rect x="45" y="195" width="175" height="46" rx="4" fill="#065f46" stroke="#10b981" stroke-width="2"/>
-    <text x="132" y="214" fill="#ffffff" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle">BRUHAT BENGALURU MAHANAGARA PALIKE</text>
-    <text x="132" y="231" fill="#a7f3d0" font-family="sans-serif" font-size="10" text-anchor="middle">${ward.slice(0, 28)}</text>
-    <rect x="128" y="241" width="8" height="55" fill="#64748b"/>
-
-    <!-- Road & Footpath -->
-    <rect x="0" y="280" width="800" height="28" fill="#475569"/>
-    <rect x="0" y="308" width="800" height="172" fill="${roadColor}"/>
-    <line x1="0" y1="395" x2="800" y2="395" stroke="#f59e0b" stroke-width="4" stroke-dasharray="28,20" opacity="0.7"/>
-
-    ${isCleaned ? `
-      <!-- CLEANED SPOT VISUAL -->
-      <rect x="80" y="255" width="300" height="95" rx="12" fill="rgba(16, 185, 129, 0.15)" stroke="#10b981" stroke-width="2" stroke-dasharray="6,4"/>
-      <circle cx="230" cy="300" r="28" fill="#10b981"/>
-      <path d="M 216 300 L 226 310 L 246 290" fill="none" stroke="#064e3b" stroke-width="5" stroke-linecap="round"/>
-      <text x="230" y="342" fill="#6ee7b7" font-family="sans-serif" font-size="14" font-weight="bold" text-anchor="middle">BBMP SWM VERIFIED CLEANED SPOT</text>
-    ` : `
-      <!-- GARBAGE / DUMPSITE PILE (AI TARGET) -->
-      <g>
-        <!-- Bounding Box Target -->
-        <rect x="65" y="238" width="320" height="136" fill="rgba(239, 68, 68, 0.08)" stroke="${accentColor}" stroke-width="2.5" stroke-dasharray="8,4"/>
-        <rect x="65" y="216" width="215" height="22" fill="${accentColor}"/>
-        <text x="72" y="231" fill="#000000" font-family="monospace" font-size="11" font-weight="bold">WASTE PILE: ${severity.toUpperCase()} (CONF 96%)</text>
-
-        <!-- Trash Heap Shapes -->
-        <ellipse cx="225" cy="342" rx="145" ry="26" fill="#334155"/>
-        <path d="M 90 340 Q 140 250 210 275 Q 260 235 320 290 Q 360 310 365 342 Z" fill="#475569" stroke="#64748b" stroke-width="2"/>
-        <!-- Black & Blue Plastic Bags, Debris -->
-        <circle cx="155" cy="315" r="24" fill="#1e293b"/>
-        <circle cx="195" cy="302" r="28" fill="#0f172a"/>
-        <circle cx="245" cy="312" r="25" fill="#1d4ed8" opacity="0.85"/>
-        <circle cx="285" cy="320" r="22" fill="#b45309" opacity="0.9"/>
-        <rect x="170" y="322" width="36" height="18" rx="3" fill="#e2e8f0" transform="rotate(-12 170 322)"/>
-        <rect x="255" y="285" width="42" height="22" rx="3" fill="#dc2626" opacity="0.85" transform="rotate(18 255 285)"/>
-        <text x="225" y="362" fill="#fca5a5" font-family="sans-serif" font-size="11" font-weight="bold" text-anchor="middle">${wasteType}</text>
-      </g>
-    `}
-
-    ${plate && !isCleaned ? `
-      <!-- VIOLATOR VEHICLE + HIGH-CONTRAST KARNATAKA RTO NUMBER PLATE -->
-      <g>
-        <!-- Vehicle Body -->
-        <rect x="445" y="215" width="295" height="145" rx="10" fill="#334155" stroke="#94a3b8" stroke-width="2"/>
-        <rect x="460" y="230" width="120" height="55" rx="6" fill="#0f172a" stroke="#475569" stroke-width="2"/>
-        <rect x="595" y="230" width="125" height="55" rx="4" fill="#475569"/>
-        <text x="657" y="262" fill="#cbd5e1" font-family="sans-serif" font-size="12" font-weight="bold" text-anchor="middle">${vehicleName || 'GOODS CARRIER'}</text>
-
-        <!-- Wheels -->
-        <circle cx="505" cy="362" r="24" fill="#0f172a" stroke="#64748b" stroke-width="5"/>
-        <circle cx="675" cy="362" r="24" fill="#0f172a" stroke="#64748b" stroke-width="5"/>
-
-        <!-- ANPR Bounding Box -->
-        <rect x="492" y="294" width="206" height="56" fill="none" stroke="#10b981" stroke-width="3"/>
-        <rect x="492" y="274" width="165" height="20" fill="#10b981"/>
-        <text x="498" y="288" fill="#052e16" font-family="monospace" font-size="11" font-weight="bold">RTO ANPR DETECTED</text>
-
-        <!-- Official Yellow Commercial Indian Number Plate -->
-        <rect x="500" y="300" width="190" height="44" rx="5" fill="#facc15" stroke="#000000" stroke-width="3"/>
-        <text x="512" y="326" fill="#1d4ed8" font-family="sans-serif" font-size="9" font-weight="bold">IND</text>
-        <text x="600" y="330" fill="#000000" font-family="monospace" font-size="23" font-weight="bold" text-anchor="middle">${plate}</text>
-      </g>
-    ` : ''}
-
-    <!-- Camera HUD Top Bar -->
-    <rect x="0" y="0" width="800" height="42" fill="rgba(11, 17, 32, 0.88)"/>
-    <circle cx="24" cy="21" r="6" fill="${isCleaned ? '#10b981' : '#ef4444'}"/>
-    <text x="38" y="26" fill="#f8fafc" font-family="monospace" font-size="13" font-weight="bold">${sourceTag} • ${title}</text>
-    <text x="780" y="26" fill="#38bdf8" font-family="monospace" font-size="12" text-anchor="end">${timestamp || '2026-10-17 14:35 IST'}</text>
-
-    <!-- Camera HUD Bottom Telemetry Bar -->
-    <rect x="0" y="442" width="800" height="38" fill="rgba(11, 17, 32, 0.9)"/>
-    <text x="16" y="465" fill="#94a3b8" font-family="monospace" font-size="12">BBMP SWM GRID • WARD: ${ward}</text>
-    <text x="784" y="465" fill="#10b981" font-family="monospace" font-size="12" font-weight="bold" text-anchor="end">UN SDG 11 • CLEANSWEEP AI</text>
-  </svg>`;
-
-  const base64Svg = window.btoa(unescape(encodeURIComponent(svg)));
-  return `data:image/svg+xml;base64,${base64Svg}`;
+function escapeXml(unsafe) {
+  if (!unsafe) return '';
+  return String(unsafe)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
 }
 
-// Preset Scenarios for 1-Click Citizen & BMTC Testing
+// Curated, verified real-world urban street waste, Indian roadside dumpsites, and cleaned road photography for all 5 locations (no beaches or seas)
+const REAL_WASTE_PHOTOS = {
+  // 1. PES University / Banashankari Ring Rd (Actual Bangalore street garbage pile — ready for live upload during presentation)
+  pesuDump: 'https://commons.wikimedia.org/wiki/Special:FilePath/Garbage_Bangalore.jpg?width=1000',
+  // 2. Koramangala 80 Feet Road (Indian roadside garbage & commercial waste dump)
+  koramangalaDump: 'https://commons.wikimedia.org/wiki/Special:FilePath/Garbej_dump_on_the_Delhi_-_Karnal_Road_03.jpg?width=1000',
+  // 3. Indiranagar 100 Feet Road (Urban street garbage heap on pavement)
+  indiranagarPlastic: 'https://commons.wikimedia.org/wiki/Special:FilePath/Street_Garbage.jpg?width=1000',
+  // 4. Whitefield ITPL Main Road (Roadside open garbage & plastic litter dump)
+  whitefieldWetland: 'https://commons.wikimedia.org/wiki/Special:FilePath/Garbage_on_a_roadside.JPG?width=1000',
+  // 5. KR Market / Majestic (Overflowing Indian street garbage dump at collection point)
+  majesticMarket: 'https://commons.wikimedia.org/wiki/Special:FilePath/India_-_Sights_%26_Culture_-_Common_garbage_dump_outside_a_temple_(2566331277).jpg?width=1000',
+  // Cleaned urban road verification photo
+  cleanedStreet: 'https://images.unsplash.com/photo-1570125909232-eb263c188f7e?auto=format&fit=crop&w=1000&q=80',
+  fallback: 'https://commons.wikimedia.org/wiki/Special:FilePath/Garbage_Bangalore.jpg?width=1000'
+};
+
+function createStreetEvidenceDataUrl({
+  plate,
+  isCleaned = false,
+  photoUrl
+}) {
+  if (isCleaned) return REAL_WASTE_PHOTOS.cleanedStreet;
+  if (photoUrl) return photoUrl;
+  if (plate === 'KA01MJ2026') return REAL_WASTE_PHOTOS.pesuDump;
+  if (plate === 'KA05ND4411') return REAL_WASTE_PHOTOS.koramangalaDump;
+  return REAL_WASTE_PHOTOS.fallback;
+}
+
+// 5 Preset Scenarios across Bengaluru with real-world street waste photographs
 const PRESET_SCENARIOS = [
   {
     id: 'scen-1',
-    title: 'Banashankari Ring Rd — Goods Auto Active Dumping',
+    title: 'PES University / Ring Rd — Active Roadside Dumping',
     locationId: 'loc-pesu',
     wasteCategory: 'Mixed Municipal Solid Waste / Construction Debris / Plastic',
     severity: 'High',
@@ -328,6 +243,7 @@ const PRESET_SCENARIOS = [
     violatorDetected: true,
     licensePlate: 'KA01MJ2026',
     vehicleName: 'Tata Ace Gold',
+    photoUrl: REAL_WASTE_PHOTOS.pesuDump,
     confidenceScore: 0.96,
     aiSummary: 'Large accumulation of unsegregated plastic waste and debris near footpath; commercial goods vehicle KA01MJ2026 actively dumping waste.'
   },
@@ -340,48 +256,52 @@ const PRESET_SCENARIOS = [
     estimatedVolumeKg: 420,
     violatorDetected: true,
     licensePlate: 'KA05ND4411',
-    vehicleName: 'Bolero Pik-Up',
+    vehicleName: 'Mahindra Bolero Pik-Up',
+    photoUrl: REAL_WASTE_PHOTOS.koramangalaDump,
     confidenceScore: 0.98,
     aiSummary: 'Critical black-spot blockage on Koramangala 80 Feet Road footpath; Mahindra Bolero Pik-Up (KA05ND4411) captured offloading C&D rubble.'
   },
   {
     id: 'scen-3',
-    title: 'Indiranagar 100 Ft Rd — Unsegregated Roadside Black Spot',
+    title: 'Indiranagar 100 Ft Rd — Plastic Bottles & Packaging Pile',
     locationId: 'loc-indiranagar',
-    wasteCategory: 'Unsegregated Domestic & Commercial Plastic Bags',
+    wasteCategory: 'Single-Use Plastic Bottles & Discarded Packaging',
     severity: 'Medium',
     estimatedVolumeKg: 95,
     violatorDetected: false,
     licensePlate: null,
     vehicleName: null,
+    photoUrl: REAL_WASTE_PHOTOS.indiranagarPlastic,
     confidenceScore: 0.94,
-    aiSummary: 'Pile of black plastic garbage bags accumulated beside storm-water drain near Indiranagar 100 Feet Road; no active dumping vehicle present.'
+    aiSummary: 'Accumulation of crushed plastic bottles, containers, and discarded packaging scattered along roadside shoulder on Indiranagar 100ft Road.'
   },
   {
     id: 'scen-4',
-    title: 'Whitefield ITPL Main Rd — 3-Wheeler Illegal Night Dump',
+    title: 'Whitefield ITPL Main Rd — Open Corridor Refuse Dump',
     locationId: 'loc-whitefield',
-    wasteCategory: 'Commercial Food Waste & E-Waste Packaging',
+    wasteCategory: 'Unsegregated Municipal Waste & Polybags',
     severity: 'High',
-    estimatedVolumeKg: 210,
-    violatorDetected: true,
-    licensePlate: 'KA51AB9090',
-    vehicleName: 'Piaggio Ape Xtra',
-    confidenceScore: 0.95,
-    aiSummary: 'Three-wheeler goods carrier KA51AB9090 detected dumping unsegregated commercial bulk waste along ITPL Main Road tech corridor.'
+    estimatedVolumeKg: 340,
+    violatorDetected: false,
+    licensePlate: null,
+    vehicleName: null,
+    photoUrl: REAL_WASTE_PHOTOS.whitefieldWetland,
+    confidenceScore: 0.96,
+    aiSummary: 'High-volume refuse dumping near ITPL corridor and storm-water boundary; severe litter accumulation requiring immediate BBMP compactor deployment.'
   },
   {
     id: 'scen-5',
-    title: 'KR Market / Majestic — Wholesale Vegetable & Plastic Heap',
+    title: 'KR Market / Majestic — Wholesale Market Garbage Heap',
     locationId: 'loc-majestic',
-    wasteCategory: 'Organic Market Refuse & Single-Use Plastic Sacks',
+    wasteCategory: 'Wholesale Market Organic Waste & Commercial Sacks',
     severity: 'Critical',
-    estimatedVolumeKg: 550,
-    violatorDetected: true,
-    licensePlate: 'KA04MM1122',
-    vehicleName: 'Ashok Leyland Dost',
-    confidenceScore: 0.97,
-    aiSummary: 'High-volume wet organic market waste mixed with plastic sacks obstructing pedestrian crossing; repeat offender vehicle KA04MM1122 identified.'
+    estimatedVolumeKg: 580,
+    violatorDetected: false,
+    licensePlate: null,
+    vehicleName: null,
+    photoUrl: REAL_WASTE_PHOTOS.majesticMarket,
+    confidenceScore: 0.98,
+    aiSummary: 'Critical market-side overflow of organic produce refuse and commercial packaging sacks blocking pedestrian thoroughfares near KR Market junction.'
   }
 ];
 
@@ -445,7 +365,7 @@ const INITIAL_TRUCKS = [
     driver_phone: '+91 98450 11223',
     current_lat: 12.9360,
     current_lng: 77.5380,
-    status: 'en_route',
+    status: 'available',
     capacity_kg: 3000
   },
   {
@@ -478,7 +398,7 @@ const INITIAL_TRUCKS = [
     driver_phone: '+91 98450 44556',
     current_lat: 12.9840,
     current_lng: 77.7340,
-    status: 'available',
+    status: 'en_route',
     capacity_kg: 4000
   },
   {
@@ -549,15 +469,6 @@ const INITIAL_VEHICLE_REGISTRY = [
 
 const INITIAL_HOTSPOTS = [
   {
-    id: 'hs-1',
-    ward_name: 'Ward 163 - Banashankari Outer Ring Road',
-    center_lat: 12.9345,
-    center_lng: 77.5345,
-    incident_count: 4,
-    last_incident_at: new Date(Date.now() - 18 * 60000).toISOString(),
-    recommended_action: 'Deploy BBMP Marshals for Night Patrol'
-  },
-  {
     id: 'hs-2',
     ward_name: 'Ward 151 - Koramangala 5th Block',
     center_lat: 12.9352,
@@ -583,46 +494,21 @@ const INITIAL_HOTSPOTS = [
     incident_count: 5,
     last_incident_at: new Date(Date.now() - 120 * 60000).toISOString(),
     recommended_action: 'Install Permanent Smart Bin & AI CCTV'
+  },
+  {
+    id: 'hs-5',
+    ward_name: 'Ward 139 - KR Market / Chickpet',
+    center_lat: 12.9634,
+    center_lng: 77.5755,
+    incident_count: 4,
+    last_incident_at: new Date(Date.now() - 30 * 60000).toISOString(),
+    recommended_action: 'Deploy BBMP Marshals for Night Patrol'
   }
 ];
 
 function createInitialReports() {
   const now = Date.now();
   return [
-    {
-      id: 'rep-101',
-      source_type: 'bmtc_bus_camera',
-      source_identifier: 'BMTC Route 401K (KA-57-F-1189)',
-      image_url: createStreetEvidenceDataUrl({
-        title: 'PESU / Banashankari Ring Rd',
-        ward: 'Ward 163 - Banashankari Outer Ring Road',
-        plate: 'KA01MJ2026',
-        vehicleName: 'Tata Ace Gold',
-        wasteType: 'Mixed Solid Waste & Debris (180 kg)',
-        severity: 'High',
-        sourceTag: 'BMTC BUS 401K CAM'
-      }),
-      after_image_url: null,
-      lat: 12.9345,
-      lng: 77.5345,
-      ward_name: 'Ward 163 - Banashankari Outer Ring Road',
-      is_verified: true,
-      ai_confidence: 0.96,
-      waste_category: 'Mixed Municipal Solid Waste / Construction Debris / Plastic',
-      severity: 'High',
-      estimated_volume_kg: 180,
-      ai_summary: 'Large accumulation of unsegregated plastic waste and debris near footpath; goods auto/truck KA01MJ2026 actively dumping waste.',
-      detected_plate: 'KA01MJ2026',
-      status: 'dispatched',
-      assigned_truck_id: 'truck-1',
-      assigned_truck_number: 'KA-01-G-4401',
-      dispatch_distance_km: 0.41,
-      created_at: new Date(now - 24 * 60000).toISOString(),
-      sla_deadline: new Date(now + 96 * 60000).toISOString(), // 1h 36m left
-      dispatched_at: new Date(now - 23 * 60000).toISOString(),
-      cleaned_at: null,
-      resolution_minutes: null
-    },
     {
       id: 'rep-102',
       source_type: 'citizen_upload',
@@ -631,9 +517,10 @@ function createInitialReports() {
         title: 'Indiranagar 100 Feet Road',
         ward: 'Ward 80 - Hoysala Nagar (Indiranagar)',
         plate: null,
-        wasteType: 'Unsegregated Plastic Garbage Bags (95 kg)',
+        wasteType: 'Single-Use Plastic Bottles & Packaging (95 kg)',
         severity: 'Medium',
-        sourceTag: 'CITIZEN UPLOAD'
+        sourceTag: 'CITIZEN UPLOAD',
+        photoUrl: REAL_WASTE_PHOTOS.indiranagarPlastic
       }),
       after_image_url: null,
       lat: 12.9784,
@@ -641,7 +528,7 @@ function createInitialReports() {
       ward_name: 'Ward 80 - Hoysala Nagar (Indiranagar)',
       is_verified: true,
       ai_confidence: 0.94,
-      waste_category: 'Unsegregated Domestic & Commercial Plastic Bags',
+      waste_category: 'Single-Use Plastic Bottles & Discarded Packaging',
       severity: 'Medium',
       estimated_volume_kg: 95,
       ai_summary: 'Roadside black-spot waste pile beside stormwater drain on Indiranagar 100ft Road. Dispatched nearest BBMP East compactor.',
@@ -650,6 +537,40 @@ function createInitialReports() {
       assigned_truck_id: 'truck-3',
       assigned_truck_number: 'KA-03-G-1109',
       dispatch_distance_km: 0.15,
+      created_at: new Date(now - 24 * 60000).toISOString(),
+      sla_deadline: new Date(now + 96 * 60000).toISOString(), // 1h 36m left
+      dispatched_at: new Date(now - 23 * 60000).toISOString(),
+      cleaned_at: null,
+      resolution_minutes: null
+    },
+    {
+      id: 'rep-104',
+      source_type: 'bmtc_bus_camera',
+      source_identifier: 'BMTC Route 335E (KA-57-EV-0892)',
+      image_url: createStreetEvidenceDataUrl({
+        title: 'Whitefield ITPL Main Road',
+        ward: 'Ward 85 - Doddanekundi / Whitefield Main Rd',
+        plate: null,
+        wasteType: 'Unsegregated Municipal Waste & Polybags (340 kg)',
+        severity: 'High',
+        sourceTag: 'BMTC BUS 335E CAM',
+        photoUrl: REAL_WASTE_PHOTOS.whitefieldWetland
+      }),
+      after_image_url: null,
+      lat: 12.9850,
+      lng: 77.7369,
+      ward_name: 'Ward 85 - Doddanekundi / Whitefield Main Rd',
+      is_verified: true,
+      ai_confidence: 0.96,
+      waste_category: 'Unsegregated Municipal Waste & Polybags',
+      severity: 'High',
+      estimated_volume_kg: 340,
+      ai_summary: 'High-volume refuse dumping near ITPL corridor; BBMP Mahadevapura compactor KA-53-G-8821 dispatched.',
+      detected_plate: null,
+      status: 'dispatched',
+      assigned_truck_id: 'truck-4',
+      assigned_truck_number: 'KA-53-G-8821',
+      dispatch_distance_km: 0.31,
       created_at: new Date(now - 52 * 60000).toISOString(),
       sla_deadline: new Date(now + 68 * 60000).toISOString(), // 1h 08m left
       dispatched_at: new Date(now - 51 * 60000).toISOString(),
@@ -667,7 +588,8 @@ function createInitialReports() {
         vehicleName: 'Bolero Pik-Up',
         wasteType: 'Construction Debris & Commercial Waste (420 kg)',
         severity: 'Critical',
-        sourceTag: 'BMTC BUS 500D CAM'
+        sourceTag: 'BMTC BUS 500D CAM',
+        photoUrl: REAL_WASTE_PHOTOS.koramangalaDump
       }),
       after_image_url: createStreetEvidenceDataUrl({
         title: 'Koramangala 80 Feet Road (CLEANED)',
@@ -705,33 +627,6 @@ function createInitialChallans() {
   const now = Date.now();
   return [
     {
-      id: 'chal-1',
-      challan_number: 'BBMP-SWM-2026-84920',
-      report_id: 'rep-101',
-      license_plate: 'KA01MJ2026',
-      owner_name: 'Suresh Babu N',
-      owner_phone: '+91 99001 12233',
-      owner_email: 'suresh.b@example.com',
-      rto_zone: 'KA-01 Koramangala RTO',
-      vehicle_model: 'Tata Ace Gold (Light Goods Vehicle)',
-      fine_amount: 5000,
-      prior_offenses: 1,
-      evidence_image_url: createStreetEvidenceDataUrl({
-        title: 'PESU / Banashankari Ring Rd',
-        ward: 'Ward 163 - Banashankari Outer Ring Road',
-        plate: 'KA01MJ2026',
-        vehicleName: 'Tata Ace Gold',
-        wasteType: 'Mixed Solid Waste & Debris (180 kg)',
-        severity: 'High',
-        sourceTag: 'BMTC BUS 401K CAM'
-      }),
-      ward_name: 'Ward 163 - Banashankari Outer Ring Road',
-      violation_lat: 12.9345,
-      violation_lng: 77.5345,
-      status: 'sms_sent',
-      issued_at: new Date(now - 23 * 60000).toISOString()
-    },
-    {
       id: 'chal-2',
       challan_number: 'BBMP-SWM-2026-84891',
       report_id: 'rep-103',
@@ -750,7 +645,8 @@ function createInitialChallans() {
         vehicleName: 'Bolero Pik-Up',
         wasteType: 'Construction Debris & Commercial Waste (420 kg)',
         severity: 'Critical',
-        sourceTag: 'BMTC BUS 500D CAM'
+        sourceTag: 'BMTC BUS 500D CAM',
+        photoUrl: REAL_WASTE_PHOTOS.koramangalaDump
       }),
       ward_name: 'Ward 151 - Koramangala 5th Block',
       violation_lat: 12.9352,
@@ -823,7 +719,7 @@ function BengaluruLeafletMap({
   const labelLayerRef = useRef(null);
   const layerGroupRef = useRef(null);
   const [leafletLoaded, setLeafletLoaded] = useState(false);
-  const [tileProvider, setTileProvider] = useState('esri_dark_streets'); // 'esri_dark_streets' | 'esri_dark_canvas' | 'esri_sat' | 'carto'
+  const [tileProvider, setTileProvider] = useState('google_streets'); // 'google_streets' | 'google_hybrid' | 'google_dark' | 'google_terrain'
   const [layersVisible, setLayersVisible] = useState({
     reports: true,
     trucks: true,
@@ -832,18 +728,48 @@ function BengaluruLeafletMap({
     buses: true
   });
 
-  // Dynamically load Leaflet CSS & JS from CDN
+  // Dynamically load Leaflet CSS & JS from CDN + Google Maps inspired styling
   useEffect(() => {
-    const styleId = 'leaflet-dark-filter-css';
+    const styleId = 'leaflet-google-maps-css';
     if (!document.getElementById(styleId)) {
       const style = document.createElement('style');
       style.id = styleId;
       style.innerHTML = `
-        .esri-dark-street-tiles {
-          filter: invert(100%) hue-rotate(180deg) brightness(92%) contrast(92%);
+        .google-dark-tiles {
+          filter: invert(92%) hue-rotate(180deg) brightness(96%) contrast(94%);
         }
         .leaflet-container {
-          background-color: #0B1120 !important;
+          background-color: #e5e3df !important;
+          font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        }
+        .leaflet-popup-content-wrapper {
+          border-radius: 12px !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+          padding: 2px !important;
+        }
+        .leaflet-popup-tip {
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.25) !important;
+        }
+        .leaflet-control-zoom {
+          border: none !important;
+          box-shadow: 0 2px 6px rgba(0,0,0,0.3) !important;
+          border-radius: 8px !important;
+          overflow: hidden;
+          margin-right: 12px !important;
+          margin-bottom: 24px !important;
+        }
+        .leaflet-control-zoom a {
+          background-color: #ffffff !important;
+          color: #3c4043 !important;
+          border-bottom: 1px solid #e8eaed !important;
+          width: 34px !important;
+          height: 34px !important;
+          line-height: 34px !important;
+          font-weight: 600 !important;
+        }
+        .leaflet-control-zoom a:hover {
+          background-color: #f1f3f4 !important;
+          color: #1a73e8 !important;
         }
       `;
       document.head.appendChild(style);
@@ -882,7 +808,7 @@ function BengaluruLeafletMap({
     document.body.appendChild(script);
   }, []);
 
-  // Initialize Map centered on Bengaluru
+  // Initialize Map centered on Bengaluru with bottom-right zoom like Google Maps
   useEffect(() => {
     if (!leafletLoaded || !mapContainerRef.current || mapInstanceRef.current) return;
 
@@ -890,8 +816,10 @@ function BengaluruLeafletMap({
     const map = L.map(mapContainerRef.current, {
       center: BENGALURU_CENTER,
       zoom: 12,
-      zoomControl: true
+      zoomControl: false
     });
+
+    L.control.zoom({ position: 'bottomright' }).addTo(map);
 
     const layerGroup = L.layerGroup().addTo(map);
     mapInstanceRef.current = map;
@@ -908,7 +836,7 @@ function BengaluruLeafletMap({
     };
   }, [leafletLoaded]);
 
-  // Switch between Esri Dark Streets (no 403 / no watermark), Esri Dark Gray Canvas, Satellite, and Carto
+  // Switch between Google Maps Standard Streets, Google Hybrid Satellite, Google Dark Mode, and Google Terrain
   useEffect(() => {
     if (!leafletLoaded || !mapInstanceRef.current) return;
     const L = window.L;
@@ -923,52 +851,45 @@ function BengaluruLeafletMap({
       labelLayerRef.current = null;
     }
 
-    if (tileProvider === 'esri_dark_canvas') {
+    if (tileProvider === 'google_hybrid') {
+      // Google Satellite + Roads Hybrid (lyrs=y)
       tileLayerRef.current = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Base/MapServer/tile/{z}/{y}/{x}',
+        'https://{s}.google.com/vt/lyrs=y&x={x}&y={y}&z={z}',
         {
-          attribution: 'Tiles &copy; Esri | BBMP GIS Command',
-          maxZoom: 19
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: 'Map data &copy;2026 Google | BBMP Spatial Command'
         }
       ).addTo(map);
-      labelLayerRef.current = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_Dark_Gray_Reference/MapServer/tile/{z}/{y}/{x}',
-        {
-          maxZoom: 19
-        }
-      ).addTo(map);
-    } else if (tileProvider === 'esri_sat') {
+    } else if (tileProvider === 'google_terrain') {
+      // Google Terrain + Streets (lyrs=p)
       tileLayerRef.current = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        'https://{s}.google.com/vt/lyrs=p&x={x}&y={y}&z={z}',
         {
-          attribution: 'Tiles &copy; Esri | BBMP Spatial Command',
-          maxZoom: 19
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: 'Map data &copy;2026 Google | BBMP Spatial Command'
         }
       ).addTo(map);
-      labelLayerRef.current = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}',
-        {
-          maxZoom: 19
-        }
-      ).addTo(map);
-    } else if (tileProvider === 'carto') {
+    } else if (tileProvider === 'google_dark') {
+      // Google Roadmap with Dark Command filter
       tileLayerRef.current = L.tileLayer(
-        `https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png?api_key=${CARTO_API_KEY}&apikey=${CARTO_API_KEY}`,
+        'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
         {
-          attribution: '&copy; OpenStreetMap &copy; CARTO',
-          subdomains: 'abcd',
-          maxZoom: 19,
-          className: 'esri-dark-street-tiles'
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: 'Map data &copy;2026 Google | BBMP Spatial Command',
+          className: 'google-dark-tiles'
         }
       ).addTo(map);
     } else {
-      // Default: Esri World Street Map with Dark Command Filter (Zero 403 blocks, crisp Bengaluru streets)
+      // Default: Crisp, Authentic Google Maps Streets (lyrs=m)
       tileLayerRef.current = L.tileLayer(
-        'https://server.arcgisonline.com/ArcGIS/rest/services/World_Street_Map/MapServer/tile/{z}/{y}/{x}',
+        'https://{s}.google.com/vt/lyrs=m&x={x}&y={y}&z={z}',
         {
-          attribution: 'Tiles &copy; Esri | Bengaluru BBMP GIS Grid (Key: ' + CARTO_API_KEY.slice(0, 8) + '...)',
-          maxZoom: 19,
-          className: 'esri-dark-street-tiles'
+          maxZoom: 20,
+          subdomains: ['mt0', 'mt1', 'mt2', 'mt3'],
+          attribution: 'Map data &copy;2026 Google | BBMP Spatial Command'
         }
       ).addTo(map);
     }
@@ -1026,23 +947,36 @@ function BengaluruLeafletMap({
       });
     }
 
-    // 2. Render Dispatch Route Polylines (Truck -> Active Waste Report)
+    // 2. Render Dispatch Route Polylines (Google Maps Navigation Blue/Green Style)
     if (layersVisible.routes) {
       reports
         .filter((r) => r.status !== 'cleaned' && r.assigned_truck_id)
         .forEach((rep) => {
           const truck = trucks.find((t) => t.id === rep.assigned_truck_id);
           if (truck) {
+            // Outer casing for Google Maps route look
+            L.polyline(
+              [
+                [truck.current_lat, truck.current_lng],
+                [rep.lat, rep.lng]
+              ],
+              {
+                color: '#1e3a8a',
+                weight: 7,
+                opacity: 0.45
+              }
+            ).addTo(group);
+
             const poly = L.polyline(
               [
                 [truck.current_lat, truck.current_lng],
                 [rep.lat, rep.lng]
               ],
               {
-                color: '#10b981',
-                weight: 3.5,
-                dashArray: '8, 8',
-                opacity: 0.95
+                color: '#1a73e8',
+                weight: 4,
+                dashArray: '8, 6',
+                opacity: 1
               }
             ).addTo(group);
 
@@ -1175,76 +1109,130 @@ function BengaluruLeafletMap({
   }, [selectedReportId, reports]);
 
   return (
-    <div className="relative w-full h-full min-h-[420px] rounded-xl overflow-hidden border border-slate-700/80 bg-[#0B1120]">
+    <div className="relative w-full h-full min-h-[420px] rounded-xl overflow-hidden border border-slate-700/80 bg-[#e5e3df] shadow-inner">
       {/* Map Canvas Container */}
       <div ref={mapContainerRef} className="w-full h-full min-h-[420px] z-10" />
 
-      {/* Top-Left GIS Layer Controls Overlay */}
-      <div className="absolute top-3 left-14 z-20 flex flex-wrap gap-1.5 pr-3">
-        {[
-          { key: 'reports', label: 'Dumpsites', color: 'bg-amber-500/20 border-amber-500/50 text-amber-300' },
-          { key: 'trucks', label: 'BBMP Trucks', color: 'bg-emerald-500/20 border-emerald-500/50 text-emerald-300' },
-          { key: 'routes', label: 'Haversine Routes', color: 'bg-teal-500/20 border-teal-500/50 text-teal-300' },
-          { key: 'hotspots', label: 'Black-Spots (200m)', color: 'bg-rose-500/20 border-rose-500/50 text-rose-300' },
-          { key: 'buses', label: 'BMTC Buses', color: 'bg-blue-500/20 border-blue-500/50 text-blue-300' }
-        ].map((item) => (
-          <button
-            key={item.key}
-            onClick={() =>
-              setLayersVisible((prev) => ({ ...prev, [item.key]: !prev[item.key] }))
-            }
-            className={`px-2.5 py-1 rounded-md text-xs font-semibold border backdrop-blur-md transition-all ${
-              layersVisible[item.key]
-                ? item.color
-                : 'bg-slate-900/80 border-slate-700 text-slate-500'
-            }`}
-          >
-            {layersVisible[item.key] ? '● ' : '○ '}
-            {item.label}
-          </button>
-        ))}
+      {/* Top-Left Google Maps Style Map Type Switcher + Layer Pills */}
+      <div className="absolute top-3 left-3 right-3 z-20 flex flex-wrap items-center justify-between gap-2 pointer-events-none">
+        {/* Google Maps Style Segmented Map Type Control */}
+        <div className="inline-flex bg-white/95 backdrop-blur-md rounded-lg p-0.5 shadow-md border border-slate-200 pointer-events-auto">
+          {[
+            { id: 'google_streets', label: 'Map' },
+            { id: 'google_hybrid', label: 'Satellite' },
+            { id: 'google_terrain', label: 'Terrain' },
+            { id: 'google_dark', label: 'Dark Grid' }
+          ].map((mode) => (
+            <button
+              key={mode.id}
+              onClick={() => setTileProvider(mode.id)}
+              className={`px-3 py-1 rounded-md text-xs font-bold transition-all ${
+                tileProvider === mode.id
+                  ? 'bg-[#1a73e8] text-white shadow-sm'
+                  : 'text-slate-700 hover:bg-slate-100'
+              }`}
+            >
+              {mode.label}
+            </button>
+          ))}
+        </div>
 
-        <button
-          onClick={() =>
-            setTileProvider((prev) =>
-              prev === 'esri_dark_streets'
-                ? 'esri_dark_canvas'
-                : prev === 'esri_dark_canvas'
-                ? 'esri_sat'
-                : prev === 'esri_sat'
-                ? 'carto'
-                : 'esri_dark_streets'
-            )
-          }
-          className="px-2.5 py-1 rounded-md text-xs font-bold border bg-slate-900/90 border-sky-500/50 text-sky-300 backdrop-blur-md hover:bg-slate-800 transition-all"
-          title="Switch Map Tile Engine"
-        >
-          🗺️ Map:{' '}
-          {tileProvider === 'esri_dark_streets'
-            ? 'Bengaluru Dark Streets'
-            : tileProvider === 'esri_dark_canvas'
-            ? 'Dark Gray Canvas'
-            : tileProvider === 'esri_sat'
-            ? 'Satellite Hybrid'
-            : 'CARTO API'}
-        </button>
+        {/* Floating Google Maps Style Filter Chips */}
+        <div className="flex flex-wrap gap-1.5 pointer-events-auto">
+          {[
+            { key: 'reports', label: '⚠️ Dumpsites', activeClass: 'bg-white text-slate-900 border-amber-500 ring-2 ring-amber-500/20' },
+            { key: 'trucks', label: '🚛 BBMP Trucks', activeClass: 'bg-white text-slate-900 border-emerald-500 ring-2 ring-emerald-500/20' },
+            { key: 'routes', label: '🧭 Routes', activeClass: 'bg-white text-slate-900 border-blue-500 ring-2 ring-blue-500/20' },
+            { key: 'hotspots', label: '🔥 Hotspots', activeClass: 'bg-white text-slate-900 border-rose-500 ring-2 ring-rose-500/20' },
+            { key: 'buses', label: '🚌 BMTC Buses', activeClass: 'bg-white text-slate-900 border-indigo-500 ring-2 ring-indigo-500/20' }
+          ].map((item) => (
+            <button
+              key={item.key}
+              onClick={() =>
+                setLayersVisible((prev) => ({ ...prev, [item.key]: !prev[item.key] }))
+              }
+              className={`px-2.5 py-1 rounded-full text-[11px] font-bold border shadow-sm transition-all ${
+                layersVisible[item.key]
+                  ? item.activeClass
+                  : 'bg-slate-900/75 border-slate-700 text-slate-400 hover:bg-slate-900'
+              }`}
+            >
+              {item.label}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Bottom-Left Bengaluru GIS Coordinate Legend */}
-      <div className="absolute bottom-3 left-3 z-20 bg-slate-900/90 backdrop-blur-md border border-slate-700/80 rounded-lg px-3 py-2 text-xs text-slate-300 flex items-center gap-3 shadow-lg">
-        <span className="flex items-center gap-1.5 font-mono text-emerald-400">
-          <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping" />
-          BLR GIS (12.9716° N, 77.5946° E)
-        </span>
-        {pickMode && (
-          <span className="text-amber-300 font-medium">
-            📍 Click anywhere on Bengaluru map to set exact GPS coordinates
-          </span>
-        )}
+      {/* Bottom-Left Google Maps Recenter & Live GPS Badge */}
+      <div className="absolute bottom-3 left-3 z-20 flex items-center gap-2">
+        <div className="bg-white/95 backdrop-blur-md border border-slate-200 rounded-lg px-3 py-1.5 text-xs text-slate-800 flex items-center gap-2 shadow-md font-medium">
+          <span className="w-2 h-2 rounded-full bg-[#1a73e8] animate-ping" />
+          <span className="font-bold text-[#1a73e8]">Google Maps</span>
+          <span className="text-slate-500 font-mono text-[11px]">12.9716° N, 77.5946° E</span>
+        </div>
+
+        <button
+          onClick={() => {
+            if (mapInstanceRef.current) {
+              mapInstanceRef.current.flyTo(BENGALURU_CENTER, 12, { duration: 0.7 });
+            }
+          }}
+          className="bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 rounded-lg px-2.5 py-1.5 text-xs font-bold shadow-md transition flex items-center gap-1"
+          title="Recenter Map on Bengaluru"
+        >
+          <Crosshair className="w-3.5 h-3.5 text-[#1a73e8]" />
+          Recenter
+        </button>
       </div>
     </div>
   );
 }
+
+// ============================================================================
+// 5B. CURATED AESTHETIC THEMES & DYNAMIC CSS ENGINE
+// ============================================================================
+const APP_THEMES = [
+  {
+    id: 'emerald',
+    name: 'Emerald Cyber',
+    badge: 'Default Dark',
+    dotColor: '#10b981',
+    bgClass: 'bg-[#0B1120] text-slate-100',
+    headerClass: 'bg-[#0B1120]/90 border-slate-800/80'
+  },
+  {
+    id: 'light',
+    name: 'Daylight Glass',
+    badge: 'Clean Light',
+    dotColor: '#0ea5e9',
+    bgClass: 'bg-slate-100 text-slate-900',
+    headerClass: 'bg-white/90 border-slate-200'
+  },
+  {
+    id: 'cyberpunk',
+    name: 'Midnight Neon',
+    badge: 'Indigo Glow',
+    dotColor: '#a855f7',
+    bgClass: 'bg-[#070514] text-indigo-50',
+    headerClass: 'bg-[#0a071d]/90 border-purple-500/20'
+  },
+  {
+    id: 'sunset',
+    name: 'Bengaluru Gold',
+    badge: 'Warm Obsidian',
+    dotColor: '#f59e0b',
+    bgClass: 'bg-[#120d0a] text-amber-50',
+    headerClass: 'bg-[#18110d]/90 border-amber-500/20'
+  },
+  {
+    id: 'gray',
+    name: 'Graphite Gray',
+    badge: 'Neutral Studio',
+    dotColor: '#9ca3af',
+    bgClass: 'bg-[#18181b] text-zinc-100',
+    headerClass: 'bg-[#18181b]/95 border-zinc-700/80'
+  }
+];
 
 // ============================================================================
 // 6. MAIN APPLICATION COMPONENT
@@ -1252,6 +1240,27 @@ function BengaluruLeafletMap({
 export default function App() {
   // Navigation Tab State
   const [activeTab, setActiveTab] = useState('command'); // 'command' | 'citizen' | 'bmtc' | 'rto'
+
+  // Aesthetic Theme State
+  const [themeId, setThemeId] = useState(() => {
+    return localStorage.getItem('cs_blr_theme') || 'emerald';
+  });
+
+  useEffect(() => {
+    localStorage.setItem('cs_blr_theme', themeId);
+  }, [themeId]);
+
+  const activeTheme = useMemo(
+    () => APP_THEMES.find((t) => t.id === themeId) || APP_THEMES[0],
+    [themeId]
+  );
+
+  const cycleNextTheme = () => {
+    const idx = APP_THEMES.findIndex((t) => t.id === themeId);
+    const next = APP_THEMES[(idx + 1) % APP_THEMES.length];
+    setThemeId(next.id);
+    triggerToast(`Theme: ${next.name}`, `Switched UI aesthetic to ${next.badge} mode.`, 'emerald');
+  };
 
   // API Keys & Config State (Reads from env or localStorage, with Zero-Friction Demo Fallback)
   const [config, setConfig] = useState(() => {
@@ -1272,27 +1281,27 @@ export default function App() {
 
   // Core Application Entities (Synced to localStorage + Supabase REST if configured)
   const [trucks, setTrucks] = useState(() => {
-    const s = localStorage.getItem('cs_blr_trucks_v6');
+    const s = localStorage.getItem('cs_blr_trucks_v13');
     return s ? JSON.parse(s) : INITIAL_TRUCKS;
   });
 
   const [vehicleRegistry, setVehicleRegistry] = useState(() => {
-    const s = localStorage.getItem('cs_blr_registry_v6');
+    const s = localStorage.getItem('cs_blr_registry_v13');
     return s ? JSON.parse(s) : INITIAL_VEHICLE_REGISTRY;
   });
 
   const [reports, setReports] = useState(() => {
-    const s = localStorage.getItem('cs_blr_reports_v6');
+    const s = localStorage.getItem('cs_blr_reports_v13');
     return s ? JSON.parse(s) : createInitialReports();
   });
 
   const [challans, setChallans] = useState(() => {
-    const s = localStorage.getItem('cs_blr_challans_v6');
+    const s = localStorage.getItem('cs_blr_challans_v13');
     return s ? JSON.parse(s) : createInitialChallans();
   });
 
   const [hotspots, setHotspots] = useState(() => {
-    const s = localStorage.getItem('cs_blr_hotspots_v6');
+    const s = localStorage.getItem('cs_blr_hotspots_v13');
     return s ? JSON.parse(s) : INITIAL_HOTSPOTS;
   });
 
@@ -1307,19 +1316,19 @@ export default function App() {
 
   // Persist state changes to localStorage
   useEffect(() => {
-    localStorage.setItem('cs_blr_trucks_v6', JSON.stringify(trucks));
+    localStorage.setItem('cs_blr_trucks_v13', JSON.stringify(trucks));
   }, [trucks]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_registry_v6', JSON.stringify(vehicleRegistry));
+    localStorage.setItem('cs_blr_registry_v13', JSON.stringify(vehicleRegistry));
   }, [vehicleRegistry]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_reports_v6', JSON.stringify(reports));
+    localStorage.setItem('cs_blr_reports_v13', JSON.stringify(reports));
   }, [reports]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_challans_v6', JSON.stringify(challans));
+    localStorage.setItem('cs_blr_challans_v13', JSON.stringify(challans));
   }, [challans]);
   useEffect(() => {
-    localStorage.setItem('cs_blr_hotspots_v6', JSON.stringify(hotspots));
+    localStorage.setItem('cs_blr_hotspots_v13', JSON.stringify(hotspots));
   }, [hotspots]);
 
   // Modals & Notification State
@@ -1327,7 +1336,7 @@ export default function App() {
   const [showSqlModal, setShowSqlModal] = useState(false);
   const [selectedChallanModal, setSelectedChallanModal] = useState(null);
   const [cleaningReportModal, setCleaningReportModal] = useState(null);
-  const [selectedReportId, setSelectedReportId] = useState('rep-101');
+  const [selectedReportId, setSelectedReportId] = useState('rep-102');
   const [toastMessage, setToastMessage] = useState(null);
 
   const triggerToast = useCallback((title, subtitle, type = 'emerald') => {
@@ -1365,9 +1374,9 @@ export default function App() {
     {
       id: 'log-1',
       time: '14:15:22 IST',
-      bus: 'Route 401K (KA-57-F-1189)',
-      ward: 'Ward 163 - Banashankari Outer Ring Road',
-      result: 'Verified High Waste (180kg) + ANPR KA01MJ2026 -> Dispatched KA-01-G-4401'
+      bus: 'Route 335E (KA-57-EV-0892)',
+      ward: 'Ward 85 - Doddanekundi / Whitefield Main Rd',
+      result: 'Verified High Waste (340kg) -> Dispatched KA-53-G-8821'
     },
     {
       id: 'log-2',
@@ -1540,7 +1549,8 @@ Return strict JSON with keys:
           vehicleName: scenario.vehicleName,
           wasteType: `${aiJson.waste_category.slice(0, 34)} (${aiJson.estimated_volume_kg} kg)`,
           severity: aiJson.severity,
-          sourceTag: sourceType === 'bmtc_bus_camera' ? 'BMTC AI BUS CAM' : 'CITIZEN REPORT'
+          sourceTag: sourceType === 'bmtc_bus_camera' ? 'BMTC AI BUS CAM' : 'CITIZEN REPORT',
+          photoUrl: scenario.photoUrl
         });
 
       const newReportId = `rep-${Date.now()}`;
@@ -1915,130 +1925,285 @@ Return strict JSON with keys:
       vehicleName: activePreset.vehicleName,
       wasteType: `${activePreset.wasteCategory.slice(0, 34)} (${activePreset.estimatedVolumeKg} kg)`,
       severity: activePreset.severity,
-      sourceTag: 'CITIZEN CAM PREVIEW'
+      sourceTag: 'CITIZEN CAM PREVIEW',
+      photoUrl: activePreset.photoUrl
     });
   }, [uploadedImagePreview, activePreset, customCoords.ward]);
 
   return (
-    <div className="min-h-screen bg-[#0B1120] text-slate-100 font-sans selection:bg-emerald-500 selection:text-slate-950 flex flex-col">
+    <div
+      data-theme={themeId}
+      className={`min-h-screen ${activeTheme.bgClass} font-sans selection:bg-emerald-500 selection:text-slate-950 flex flex-col transition-colors duration-300`}
+    >
+      {/* Dynamic Aesthetic Theme Overrides */}
+      <style>{`
+        /* Daylight Glass (Clean Light Mode) Overrides */
+        [data-theme="light"] {
+          background-image: radial-gradient(at 0% 0%, rgba(16, 185, 129, 0.08) 0px, transparent 50%),
+                            radial-gradient(at 100% 0%, rgba(14, 165, 233, 0.08) 0px, transparent 50%);
+        }
+        [data-theme="light"] .bg-\\[\\#1E293B\\]\\/70,
+        [data-theme="light"] .bg-\\[\\#1E293B\\]\\/80 {
+          background-color: rgba(255, 255, 255, 0.92) !important;
+          border-color: #cbd5e1 !important;
+          box-shadow: 0 10px 25px -5px rgba(15, 23, 42, 0.06) !important;
+        }
+        [data-theme="light"] .bg-slate-900\\/60,
+        [data-theme="light"] .bg-slate-900\\/70,
+        [data-theme="light"] .bg-slate-900\\/75,
+        [data-theme="light"] .bg-slate-900\\/80,
+        [data-theme="light"] .bg-slate-900\\/90,
+        [data-theme="light"] .bg-slate-900 {
+          background-color: #f8fafc !important;
+          border-color: #e2e8f0 !important;
+          color: #0f172a !important;
+        }
+        [data-theme="light"] .bg-slate-950,
+        [data-theme="light"] .bg-slate-950\\/90 {
+          background-color: #f1f5f9 !important;
+          border-color: #cbd5e1 !important;
+          color: #0f172a !important;
+        }
+        [data-theme="light"] .bg-slate-800\\/95,
+        [data-theme="light"] .bg-slate-800 {
+          background-color: #e2e8f0 !important;
+          color: #0f172a !important;
+        }
+        [data-theme="light"] .text-white,
+        [data-theme="light"] .text-slate-100,
+        [data-theme="light"] .text-slate-200 {
+          color: #0f172a !important;
+        }
+        [data-theme="light"] .text-slate-300,
+        [data-theme="light"] .text-slate-400 {
+          color: #475569 !important;
+        }
+        [data-theme="light"] .text-emerald-400,
+        [data-theme="light"] .text-emerald-300 {
+          color: #059669 !important;
+        }
+        [data-theme="light"] .text-amber-400,
+        [data-theme="light"] .text-amber-300 {
+          color: #d97706 !important;
+        }
+        [data-theme="light"] .text-sky-400,
+        [data-theme="light"] .text-blue-300 {
+          color: #0284c7 !important;
+        }
+        [data-theme="light"] .text-rose-400,
+        [data-theme="light"] .text-rose-300 {
+          color: #e11d48 !important;
+        }
+        [data-theme="light"] .border-slate-800,
+        [data-theme="light"] .border-slate-800\\/80,
+        [data-theme="light"] .border-slate-700,
+        [data-theme="light"] .border-slate-700\\/80 {
+          border-color: #e2e8f0 !important;
+        }
+
+        /* Midnight Neon (Cyberpunk Glow) Overrides */
+        [data-theme="cyberpunk"] {
+          background-image: radial-gradient(at 15% 10%, rgba(168, 85, 247, 0.16) 0px, transparent 45%),
+                            radial-gradient(at 85% 20%, rgba(6, 182, 212, 0.14) 0px, transparent 50%);
+        }
+        [data-theme="cyberpunk"] .bg-\\[\\#1E293B\\]\\/70,
+        [data-theme="cyberpunk"] .bg-\\[\\#1E293B\\]\\/80 {
+          background-color: rgba(19, 14, 43, 0.78) !important;
+          border-color: rgba(168, 85, 247, 0.28) !important;
+          box-shadow: 0 0 25px -5px rgba(168, 85, 247, 0.12) !important;
+        }
+        [data-theme="cyberpunk"] .bg-slate-900\\/60,
+        [data-theme="cyberpunk"] .bg-slate-900\\/75,
+        [data-theme="cyberpunk"] .bg-slate-900\\/80,
+        [data-theme="cyberpunk"] .bg-slate-900\\/90 {
+          background-color: rgba(12, 9, 28, 0.85) !important;
+          border-color: rgba(139, 92, 246, 0.22) !important;
+        }
+
+        /* Bengaluru Gold (Warm Obsidian Sunset) Overrides */
+        [data-theme="sunset"] {
+          background-image: radial-gradient(at 10% 0%, rgba(245, 158, 11, 0.14) 0px, transparent 50%),
+                            radial-gradient(at 90% 10%, rgba(239, 68, 68, 0.1) 0px, transparent 45%);
+        }
+        [data-theme="sunset"] .bg-\\[\\#1E293B\\]\\/70,
+        [data-theme="sunset"] .bg-\\[\\#1E293B\\]\\/80 {
+          background-color: rgba(34, 24, 19, 0.82) !important;
+          border-color: rgba(245, 158, 11, 0.25) !important;
+        }
+        [data-theme="sunset"] .bg-slate-900\\/60,
+        [data-theme="sunset"] .bg-slate-900\\/75,
+        [data-theme="sunset"] .bg-slate-900\\/80,
+        [data-theme="sunset"] .bg-slate-900\\/90 {
+          background-color: rgba(24, 17, 13, 0.88) !important;
+          border-color: rgba(245, 158, 11, 0.18) !important;
+        }
+
+        /* Graphite Gray (Proper Neutral Monochrome Studio) Overrides */
+        [data-theme="gray"] {
+          background-image: radial-gradient(at 50% 0%, rgba(161, 161, 170, 0.08) 0px, transparent 60%);
+        }
+        [data-theme="gray"] .bg-\\[\\#1E293B\\]\\/70,
+        [data-theme="gray"] .bg-\\[\\#1E293B\\]\\/80 {
+          background-color: rgba(39, 39, 42, 0.85) !important;
+          border-color: #3f3f46 !important;
+          box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.35) !important;
+        }
+        [data-theme="gray"] .bg-slate-900\\/60,
+        [data-theme="gray"] .bg-slate-900\\/70,
+        [data-theme="gray"] .bg-slate-900\\/75,
+        [data-theme="gray"] .bg-slate-900\\/80,
+        [data-theme="gray"] .bg-slate-900\\/90,
+        [data-theme="gray"] .bg-slate-900 {
+          background-color: #27272a !important;
+          border-color: #3f3f46 !important;
+        }
+        [data-theme="gray"] .bg-slate-950,
+        [data-theme="gray"] .bg-slate-950\\/90 {
+          background-color: #18181b !important;
+          border-color: #3f3f46 !important;
+        }
+        [data-theme="gray"] .bg-slate-800\\/95,
+        [data-theme="gray"] .bg-slate-800,
+        [data-theme="gray"] .bg-slate-800\\/60 {
+          background-color: #3f3f46 !important;
+          border-color: #52525b !important;
+        }
+        [data-theme="gray"] .border-slate-800,
+        [data-theme="gray"] .border-slate-800\\/80,
+        [data-theme="gray"] .border-slate-800\\/90,
+        [data-theme="gray"] .border-slate-700,
+        [data-theme="gray"] .border-slate-700\\/80 {
+          border-color: #3f3f46 !important;
+        }
+        [data-theme="gray"] .text-slate-400,
+        [data-theme="gray"] .text-slate-300 {
+          color: #a1a1aa !important;
+        }
+      `}</style>
+
       {/* ====================================================================
           TOP NAVIGATION BAR
       ==================================================================== */}
-      <header className="sticky top-0 z-40 bg-[#0B1120]/95 backdrop-blur-xl border-b border-slate-800/90 px-4 lg:px-6 py-3">
-        <div className="max-w-[1600px] mx-auto flex flex-col xl:flex-row xl:items-center xl:justify-between gap-3">
-          {/* Brand Logo & Badges */}
-          <div className="flex flex-wrap items-center justify-between gap-3">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center shadow-lg shadow-emerald-500/20 border border-emerald-400/40">
-                <Sparkles className="w-6 h-6 text-slate-950" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-lg sm:text-xl font-extrabold tracking-tight text-white">
+      <header className={`sticky top-0 z-40 backdrop-blur-xl border-b px-4 lg:px-6 py-2.5 transition-colors duration-300 ${activeTheme.headerClass}`}>
+        <div className="max-w-[1600px] w-full mx-auto flex flex-col gap-2.5">
+          {/* Line 1: CleanSweep AI Brand on left, immediately followed towards the left by Theme Switcher, Reset, SQL, and API Keys */}
+          <div className="flex items-center justify-between gap-3 flex-wrap">
+            <div className="flex items-center gap-3 sm:gap-4 flex-wrap">
+              {/* Brand Logo & Title */}
+              <div className="flex items-center gap-2.5 shrink-0">
+                <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center shadow-md shadow-emerald-500/10 border border-emerald-300/30">
+                  <Sparkles className="w-4 h-4 text-slate-950" />
+                </div>
+                <div>
+                  <h1 className="text-base sm:text-lg font-extrabold tracking-tight text-white leading-none">
                     CleanSweep <span className="text-emerald-400">AI</span>
                   </h1>
-                  <span className="px-2 py-0.5 text-[11px] font-bold uppercase tracking-wider rounded-full bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                    UN SDG 11
-                  </span>
-                  <span className="px-2 py-0.5 text-[11px] font-semibold rounded-full bg-amber-500/15 text-amber-300 border border-amber-500/30">
-                    Team Rogue Protocol
-                  </span>
+                  <p className="text-[10px] text-slate-400 hidden sm:block mt-0.5">
+                    Bengaluru Smart Waste • UN SDG 11
+                  </p>
                 </div>
-                <p className="text-xs text-slate-400">
-                  Bengaluru BBMP Solid Waste Grid • BMTC Bus Edge AI • Karnataka RTO ANPR Enforcement
-                </p>
+              </div>
+
+              {/* Utility Controls positioned right after the brand title towards the left */}
+              <div className="flex items-center gap-1.5 flex-wrap">
+                {/* Aesthetic Theme Switcher Button */}
+                <button
+                  onClick={cycleNextTheme}
+                  title={`Current Theme: ${activeTheme.name} (Click to switch aesthetic)`}
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-200 border border-slate-800 hover:border-emerald-500/40 transition flex items-center gap-2 text-xs font-semibold shadow-sm"
+                >
+                  <Palette className="w-3.5 h-3.5 text-emerald-400" />
+                  <span
+                    className="w-2 h-2 rounded-full"
+                    style={{ backgroundColor: activeTheme.dotColor }}
+                  />
+                  <span className="hidden sm:inline">{activeTheme.name}</span>
+                </button>
+
+                <button
+                  onClick={handleResetDemoData}
+                  title="Reset / Seed Bengaluru Demo Data"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                  <span className="hidden sm:inline">Reset</span>
+                </button>
+
+                <button
+                  onClick={() => setShowSqlModal(true)}
+                  title="View / Download supabase_setup.sql"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-slate-300 hover:text-white border border-slate-800 transition flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <FileCode className="w-3.5 h-3.5 text-sky-400" />
+                  <span className="hidden sm:inline">SQL</span>
+                </button>
+
+                <button
+                  onClick={() => setShowConfigModal(true)}
+                  title="Configure Gemini & Supabase API Keys"
+                  className="px-2.5 py-1.5 rounded-lg bg-slate-900/80 hover:bg-slate-800 text-amber-300 border border-slate-800 hover:border-amber-500/40 transition flex items-center gap-1.5 text-xs font-medium"
+                >
+                  <Settings className="w-3.5 h-3.5 text-amber-400" />
+                  <span className="hidden sm:inline">API Keys</span>
+                </button>
               </div>
             </div>
 
-            {/* Mobile Action Buttons */}
-            <div className="flex xl:hidden items-center gap-2">
-              <button
-                onClick={handleResetDemoData}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 flex items-center gap-1.5"
-              >
-                <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
-                Reset
-              </button>
-              <button
-                onClick={() => setShowSqlModal(true)}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 flex items-center gap-1.5"
-              >
-                <FileCode className="w-3.5 h-3.5 text-sky-400" />
-                SQL
-              </button>
-              <button
-                onClick={() => setShowConfigModal(true)}
-                className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 flex items-center gap-1.5"
-              >
-                <Settings className="w-3.5 h-3.5 text-amber-400" />
-                Keys
-              </button>
+            {/* Status Indicator */}
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-slate-900/70 border border-slate-800/80 text-[11px] font-medium text-slate-400 shrink-0"
+              title="Database Connection Status"
+            >
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400" />
+              {config.supabaseUrl ? 'Supabase Connected' : 'Demo Mode'}
             </div>
           </div>
 
-          {/* Center View Switcher Tabs */}
-          <nav className="flex items-center gap-1.5 overflow-x-auto pb-1 xl:pb-0">
-            {[
-              { id: 'command', label: '🗺️ BBMP Command Center', badge: kpis.activeCount },
-              { id: 'citizen', label: '📸 Citizen Report & SLA', badge: '< 2Hr' },
-              { id: 'bmtc', label: '🚌 BMTC Bus Cam Simulator', badge: isAutoPatrolActive ? 'AUTO' : '4 Routes' },
-              { id: 'rto', label: '🚨 RTO ANPR & E-Challans', badge: challans.length }
-            ].map((tab) => {
-              const active = activeTab === tab.id;
-              return (
-                <button
-                  key={tab.id}
-                  onClick={() => setActiveTab(tab.id)}
-                  className={`px-3.5 py-2 rounded-xl text-xs sm:text-sm font-bold whitespace-nowrap transition-all flex items-center gap-2 border ${
-                    active
-                      ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/50 shadow-md shadow-emerald-950/50'
-                      : 'bg-slate-900/70 text-slate-400 border-slate-800 hover:bg-slate-800/80 hover:text-slate-200'
-                  }`}
-                >
-                  <span>{tab.label}</span>
-                  <span
-                    className={`px-1.5 py-0.5 text-[10px] rounded-md font-mono ${
-                      active ? 'bg-emerald-500 text-slate-950 font-extrabold' : 'bg-slate-800 text-slate-400'
+          {/* Line 2: BBMP Grid badge and Tabs moved to this new line till RTO Challans */}
+          <div className="flex items-center justify-between gap-3 flex-wrap pt-1 border-t border-slate-800/60">
+            <nav className="flex items-center bg-slate-900/90 p-1 rounded-xl border border-slate-800/90 overflow-x-auto no-scrollbar">
+              {[
+                { id: 'command', label: 'Command Grid', icon: MapPin, badge: kpis.activeCount },
+                { id: 'citizen', label: 'Citizen Report', icon: Camera, badge: '< 2Hr' },
+                { id: 'bmtc', label: 'BMTC Cam', icon: Bus, badge: isAutoPatrolActive ? 'AUTO' : null },
+                { id: 'rto', label: 'RTO Challans', icon: ShieldAlert, badge: challans.length }
+              ].map((tab) => {
+                const active = activeTab === tab.id;
+                const Icon = tab.icon;
+                return (
+                  <button
+                    key={tab.id}
+                    onClick={() => setActiveTab(tab.id)}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-semibold whitespace-nowrap transition-all flex items-center gap-1.5 ${
+                      active
+                        ? 'bg-emerald-500 text-slate-950 font-bold shadow-sm'
+                        : 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60'
                     }`}
                   >
-                    {tab.badge}
-                  </span>
-                </button>
-              );
-            })}
-          </nav>
+                    <Icon className={`w-3.5 h-3.5 ${active ? 'text-slate-950' : 'text-slate-400'}`} />
+                    <span>{tab.label}</span>
+                    {tab.badge !== null && (
+                      <span
+                        className={`px-1.5 py-0.2 text-[10px] rounded-full font-mono ${
+                          active
+                            ? 'bg-slate-950/20 text-slate-950 font-extrabold'
+                            : 'bg-slate-800 text-slate-400'
+                        }`}
+                      >
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                );
+              })}
+            </nav>
 
-          {/* Right Action Buttons (Desktop) */}
-          <div className="hidden xl:flex items-center gap-2">
-            <div className="px-2.5 py-1.5 rounded-lg bg-slate-900/90 border border-slate-800 text-[11px] font-medium text-slate-300 flex items-center gap-2">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
-              {config.supabaseUrl ? 'Supabase Live Connected' : 'Bengaluru Live Demo Mode'}
+            <div className="flex items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded-full bg-slate-900 text-emerald-400 border border-slate-700/80">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                BBMP Grid Active
+              </span>
             </div>
-
-            <button
-              onClick={handleResetDemoData}
-              title="Reset / Seed Bengaluru Demo Data"
-              className="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition flex items-center gap-1.5"
-            >
-              <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
-              <span>🔄 Reset / Seed Demo</span>
-            </button>
-
-            <button
-              onClick={() => setShowSqlModal(true)}
-              className="px-3 py-2 rounded-xl bg-slate-800/90 hover:bg-slate-700 text-xs font-semibold text-slate-200 border border-slate-700 transition flex items-center gap-1.5"
-            >
-              <FileCode className="w-3.5 h-3.5 text-sky-400" />
-              <span>supabase_setup.sql</span>
-            </button>
-
-            <button
-              onClick={() => setShowConfigModal(true)}
-              className="px-3 py-2 rounded-xl bg-amber-500/15 hover:bg-amber-500/25 text-xs font-bold text-amber-300 border border-amber-500/40 transition flex items-center gap-1.5"
-            >
-              <Settings className="w-3.5 h-3.5 text-amber-400" />
-              <span>⚙️ API Keys</span>
-            </button>
           </div>
         </div>
       </header>
@@ -2065,91 +2230,91 @@ Return strict JSON with keys:
       {/* ====================================================================
           MAIN CONTENT AREA
       ==================================================================== */}
-      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-6 py-5 space-y-6">
-        {/* TOP KPI STRIP (Always Visible for Live Situation Awareness) */}
-        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3.5">
-          <div className="bg-[#1E293B]/80 backdrop-blur-md border border-slate-700/70 rounded-2xl p-4 flex items-center justify-between">
+      <main className="flex-1 max-w-[1600px] w-full mx-auto px-4 lg:px-6 py-4 space-y-5">
+        {/* TOP KPI STRIP (Sleek & Compact) */}
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between hover:border-slate-700/80 transition">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 Active Black-Spots
               </p>
-              <p className="text-2xl sm:text-3xl font-extrabold text-amber-400 mt-1">
-                {kpis.activeCount}
-              </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Live &lt; 2-Hr SLA tracked
-              </p>
+              <div className="flex items-baseline gap-2 mt-0.5">
+                <p className="text-xl sm:text-2xl font-extrabold text-amber-400">
+                  {kpis.activeCount}
+                </p>
+                <span className="text-[10px] text-slate-500">&lt; 2-Hr SLA</span>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-amber-500/15 border border-amber-500/30 flex items-center justify-center text-amber-400">
-              <Clock className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-[#1E293B]/80 backdrop-blur-md border border-slate-700/70 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                Avg SLA Resolution
-              </p>
-              <p className="text-2xl sm:text-3xl font-extrabold text-emerald-400 mt-1">
-                {kpis.avgResolution} <span className="text-base font-bold">mins</span>
-              </p>
-              <p className="text-[11px] text-emerald-300/80 mt-0.5">
-                Target: &lt; 120 mins (SDG 11)
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center text-emerald-400">
-              <CheckCircle2 className="w-6 h-6" />
+            <div className="w-9 h-9 rounded-lg bg-amber-500/10 border border-amber-500/20 flex items-center justify-center text-amber-400">
+              <Clock className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="bg-[#1E293B]/80 backdrop-blur-md border border-slate-700/70 rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between hover:border-slate-700/80 transition">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                Avg Resolution
+              </p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <p className="text-xl sm:text-2xl font-extrabold text-emerald-400">
+                  {kpis.avgResolution}m
+                </p>
+                <span className="text-[10px] text-emerald-400/70">Target &lt; 120m</span>
+              </div>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center text-emerald-400">
+              <CheckCircle2 className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between hover:border-slate-700/80 transition">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 BBMP Fleet Ready
               </p>
-              <p className="text-2xl sm:text-3xl font-extrabold text-sky-400 mt-1">
-                {kpis.availableTrucksCount} <span className="text-base text-slate-400">/ {kpis.totalTrucks}</span>
-              </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                Haversine GPS auto-routed
-              </p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <p className="text-xl sm:text-2xl font-extrabold text-sky-400">
+                  {kpis.availableTrucksCount}<span className="text-sm text-slate-500 font-semibold">/{kpis.totalTrucks}</span>
+                </p>
+                <span className="text-[10px] text-slate-500">GPS Routed</span>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-sky-500/15 border border-sky-500/30 flex items-center justify-center text-sky-400">
-              <Truck className="w-6 h-6" />
-            </div>
-          </div>
-
-          <div className="bg-[#1E293B]/80 backdrop-blur-md border border-slate-700/70 rounded-2xl p-4 flex items-center justify-between">
-            <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
-                RTO ANPR E-Challans
-              </p>
-              <p className="text-2xl sm:text-3xl font-extrabold text-rose-400 mt-1">
-                ₹{kpis.totalFinesAmount.toLocaleString('en-IN')}
-              </p>
-              <p className="text-[11px] text-rose-300/80 mt-0.5">
-                {challans.length} commercial violators fined
-              </p>
-            </div>
-            <div className="w-11 h-11 rounded-xl bg-rose-500/15 border border-rose-500/30 flex items-center justify-center text-rose-400">
-              <ShieldAlert className="w-6 h-6" />
+            <div className="w-9 h-9 rounded-lg bg-sky-500/10 border border-sky-500/20 flex items-center justify-center text-sky-400">
+              <Truck className="w-4 h-4" />
             </div>
           </div>
 
-          <div className="col-span-2 lg:col-span-1 bg-[#1E293B]/80 backdrop-blur-md border border-slate-700/70 rounded-2xl p-4 flex items-center justify-between">
+          <div className="bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between hover:border-slate-700/80 transition">
             <div>
-              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
+                RTO E-Challans
+              </p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <p className="text-xl sm:text-2xl font-extrabold text-rose-400">
+                  ₹{kpis.totalFinesAmount.toLocaleString('en-IN')}
+                </p>
+                <span className="text-[10px] text-rose-400/70">{challans.length} fined</span>
+              </div>
+            </div>
+            <div className="w-9 h-9 rounded-lg bg-rose-500/10 border border-rose-500/20 flex items-center justify-center text-rose-400">
+              <ShieldAlert className="w-4 h-4" />
+            </div>
+          </div>
+
+          <div className="col-span-2 lg:col-span-1 bg-slate-900/60 backdrop-blur-md border border-slate-800/80 rounded-xl p-3.5 flex items-center justify-between hover:border-slate-700/80 transition">
+            <div>
+              <p className="text-[11px] font-semibold uppercase tracking-wider text-slate-400">
                 Repeat Hotspots
               </p>
-              <p className="text-2xl sm:text-3xl font-extrabold text-purple-400 mt-1">
-                {kpis.criticalHotspotsCount} <span className="text-sm font-semibold text-slate-400">Wards</span>
-              </p>
-              <p className="text-[11px] text-slate-400 mt-0.5">
-                BBMP Marshal &amp; CCTV alerts
-              </p>
+              <div className="flex items-baseline gap-1.5 mt-0.5">
+                <p className="text-xl sm:text-2xl font-extrabold text-purple-400">
+                  {kpis.criticalHotspotsCount}
+                </p>
+                <span className="text-[10px] text-slate-500">Wards Monitored</span>
+              </div>
             </div>
-            <div className="w-11 h-11 rounded-xl bg-purple-500/15 border border-purple-500/30 flex items-center justify-center text-purple-400">
-              <Flame className="w-6 h-6" />
+            <div className="w-9 h-9 rounded-lg bg-purple-500/10 border border-purple-500/20 flex items-center justify-center text-purple-400">
+              <Flame className="w-4 h-4" />
             </div>
           </div>
         </div>
@@ -2491,12 +2656,28 @@ Return strict JSON with keys:
                     <label className="block text-xs font-bold uppercase tracking-wider text-slate-300 mb-1.5">
                       2. Evidence Photo Preview
                     </label>
-                    <div className="relative rounded-xl overflow-hidden border border-slate-700 bg-slate-950 aspect-video">
+                    <div className="relative rounded-xl overflow-hidden border border-slate-700 bg-slate-950 aspect-video group">
                       <img
                         src={currentCitizenPreviewUrl}
                         alt="Bengaluru Evidence Preview"
                         className="w-full h-full object-cover"
+                        onError={(e) => {
+                          e.currentTarget.src = REAL_WASTE_PHOTOS.fallback;
+                        }}
                       />
+                      {!uploadedImagePreview && (
+                        <>
+                          <div className="absolute top-2 left-2 bg-slate-950/85 backdrop-blur-sm px-2 py-0.5 rounded text-[10px] font-mono font-bold text-red-400 border border-red-500/40 flex items-center gap-1.5">
+                            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+                            AI CAM • {activePreset.severity.toUpperCase()}
+                          </div>
+                          {activePreset.licensePlate && (
+                            <div className="absolute bottom-2 right-2 bg-yellow-400 text-slate-950 px-2 py-0.5 rounded border-2 border-slate-950 font-mono font-black text-xs shadow-lg">
+                              IND {activePreset.licensePlate}
+                            </div>
+                          )}
+                        </>
+                      )}
                     </div>
                   </div>
 
@@ -3081,11 +3262,22 @@ Return strict JSON with keys:
               </button>
             </div>
 
-            <img
-              src={selectedChallanModal.evidence_image_url}
-              alt="ANPR Violation Proof"
-              className="w-full h-48 object-cover rounded-xl border border-slate-700"
-            />
+            <div className="relative rounded-xl overflow-hidden border border-slate-700 h-52 bg-slate-950">
+              <img
+                src={selectedChallanModal.evidence_image_url}
+                alt="ANPR Violation Proof"
+                className="w-full h-full object-cover"
+                onError={(e) => {
+                  e.currentTarget.src = REAL_WASTE_PHOTOS.fallback;
+                }}
+              />
+              <div className="absolute top-2.5 left-2.5 bg-slate-950/85 backdrop-blur-sm px-2.5 py-1 rounded text-[10px] font-mono font-bold text-emerald-400 border border-emerald-500/40">
+                ANPR VERIFIED EVIDENCE • {selectedChallanModal.ward_name}
+              </div>
+              <div className="absolute bottom-2.5 right-2.5 bg-yellow-400 text-slate-950 px-2.5 py-1 rounded border-2 border-slate-950 font-mono font-black text-sm shadow-xl">
+                IND {selectedChallanModal.license_plate}
+              </div>
+            </div>
 
             <div className="grid grid-cols-2 gap-3 text-xs bg-slate-950 p-4 rounded-xl border border-slate-800">
               <div>
